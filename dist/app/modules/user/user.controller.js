@@ -13,29 +13,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userController = void 0;
-const user_service_1 = require("./user.service");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const upload_1 = __importDefault(require("../../utils/fileManagement/upload"));
 const deleteFile_1 = __importDefault(require("../../utils/fileManagement/deleteFile"));
+const server_1 = require("../../../server");
 // Create user
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const user = req.body;
-        const result = yield user_service_1.UserService.createUserToDB(user);
-        res.status(200).json({
-            success: true,
-            message: 'User created successfully',
-            data: result
-        });
-    }
-    catch (error) {
-        next(error);
-    }
+    // Create user configuration here
 });
 // Get users
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    res.status(200).json({
-        success: true,
+    server_1.con.query('SELECT * FROM `user_info`', (err, result) => {
+        if (err) {
+            next(err);
+        }
+        else {
+            res.status(200).json({
+                success: true,
+                message: 'User info fetched successfully',
+                result: result,
+            });
+        }
     });
 });
 /**

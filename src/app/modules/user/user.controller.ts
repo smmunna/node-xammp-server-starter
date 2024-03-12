@@ -1,29 +1,30 @@
 import { NextFunction, Request, Response } from "express";
-import { UserService } from "./user.service";
 import jwt from "jsonwebtoken";
 import upload from "../../utils/fileManagement/upload";
 import deleteFile from "../../utils/fileManagement/deleteFile";
+import { con } from "../../../server";
 
 // Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const user = req.body;
-        const result = await UserService.createUserToDB(user)
-        res.status(200).json({
-            success: true,
-            message: 'User created successfully',
-            data: result
-        })
-    } catch (error) {
-        next(error);
-    }
+        // Create user configuration here
+        
 }
 
 // Get users
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
-    res.status(200).json({
-        success: true,
+
+    con.query('SELECT * FROM `user_info`', (err, result) => {
+        if (err) {
+            next(err)
+        } else {
+            res.status(200).json({
+                success: true,
+                message: 'User info fetched successfully',
+                result: result,
+            });
+        }
     });
+
 }
 
 /**
