@@ -12,6 +12,7 @@
    - "nodemon": "^3.1.0"
    - "typescript": "^5.4.2"
    - "multer": "^1.4.5-lts.1"
+   - "nodemailer": "^6.9.12"
 
 ### Folder Structures
    - `dist` > compiled the src folder all files
