@@ -71,6 +71,8 @@ const fileUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }
             // Multer has processed the file, and it can be accessed in req.file
             const uploadedFile = req.file;
+            // const other = req.body.name;
+            // console.log(other)
             // Respond with the uploaded file in the response
             res.status(200).json({
                 message: 'Photo uploaded successfully',
