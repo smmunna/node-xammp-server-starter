@@ -63,13 +63,10 @@ const signInUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 // File Uploading
 const fileUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Use the Multer middleware to handle the file upload
         upload_1.default.single('photo')(req, res, (err) => {
             if (err) {
-                // Handle Multer error (e.g., file size exceeds limit)
                 return res.status(400).send(err.message);
             }
-            // Multer has processed the file, and it can be accessed in req.file
             const uploadedFile = req.file;
             // const other = req.body.name;
             // console.log(other)
@@ -77,7 +74,7 @@ const fileUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             res.status(200).json({
                 message: 'Photo uploaded successfully',
                 file: uploadedFile,
-                nextUrl: `${req.protocol}://${req.get('host')}/` + (uploadedFile === null || uploadedFile === void 0 ? void 0 : uploadedFile.path.replace(/\\/g, "/"))
+                nextUrl: `${req.protocol}://${req.get('host')}/` + (uploadedFile === null || uploadedFile === void 0 ? void 0 : uploadedFile.path.replace(/\\/g, "/")) //use protocol `https://` use extra s
             });
         });
     }

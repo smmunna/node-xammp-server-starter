@@ -6,8 +6,8 @@ import { con } from "../../../server";
 
 // Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
-        // Create user configuration here
-        
+    // Create user configuration here
+
 }
 
 // Get users
@@ -62,14 +62,10 @@ const signInUser = async (req: Request, res: Response, next: NextFunction) => {
 const fileUpload = async (req: Request, res: Response) => {
 
     try {
-        // Use the Multer middleware to handle the file upload
         upload.single('photo')(req, res, (err: any) => {
             if (err) {
-                // Handle Multer error (e.g., file size exceeds limit)
                 return res.status(400).send(err.message);
             }
-
-            // Multer has processed the file, and it can be accessed in req.file
             const uploadedFile = req.file;
             // const other = req.body.name;
             // console.log(other)
@@ -78,7 +74,7 @@ const fileUpload = async (req: Request, res: Response) => {
             res.status(200).json({
                 message: 'Photo uploaded successfully',
                 file: uploadedFile,
-                nextUrl: `${req.protocol}://${req.get('host')}/` + uploadedFile?.path.replace(/\\/g, "/")
+                nextUrl: `${req.protocol}://${req.get('host')}/` + uploadedFile?.path.replace(/\\/g, "/") //use protocol `https://` use extra s
             });
         });
     } catch (error) {
