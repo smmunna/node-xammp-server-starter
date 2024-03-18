@@ -2,9 +2,17 @@
 
 ### New Features
    - Server created with Node, Express, TypeScript (JS), MySQL
-   - `lib/dbQuery` > executeQuery() function takes a query string and returns result
+   - File uploading system configured
+   - Mail server configured
+   - JWT authentication configured
+   - `lib/dbQuery` > `executeQuery()` function takes a `query string` and returns `result`
      - Any types of query string you can pass eg. `SELECT * FROM user_info`
-
+     - You can create one by one query string and pass it to `executeQuery()`
+     ```javascript
+      const oldQuery = 'SELECT * FROM `user_info`';
+      const newQuery = 'SELECT COUNT(*) FROM `user_info`';
+     ```
+  
 ### Installed packages (NPM)
    - "cors": "^2.8.5"
    - "dotenv": "^16.4.5"
