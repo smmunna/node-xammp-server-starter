@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import upload from "../../utils/fileManagement/upload";
 import deleteFile from "../../utils/fileManagement/deleteFile";
-import { con } from "../../../server";
+import executeQuery from "../../lib/dbQuery/dbQuery";
 
 // Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -12,20 +12,21 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 
 // Get users
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
+    const userQuery = 'SELECT * FROM `user_info`';
+    try {
+        const userResult = await executeQuery(userQuery);
 
-    con.query('SELECT * FROM `user_info`', (err, result) => {
-        if (err) {
-            next(err)
-        } else {
-            res.status(200).json({
-                success: true,
-                message: 'User info fetched successfully',
-                result: result,
-            });
-        }
-    });
+        res.status(200).json({
+            success: true,
+            message: 'User info fetched successfully',
+            users: userResult
+        });
+    } catch (err) {
+        next(err);
+    }
 
-}
+};
+
 
 /**
  * JWT GENERATE TOKEN WHEN SIGN IN USER

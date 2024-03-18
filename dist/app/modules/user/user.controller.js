@@ -16,25 +16,25 @@ exports.userController = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const upload_1 = __importDefault(require("../../utils/fileManagement/upload"));
 const deleteFile_1 = __importDefault(require("../../utils/fileManagement/deleteFile"));
-const server_1 = require("../../../server");
+const dbQuery_1 = __importDefault(require("../../lib/dbQuery/dbQuery"));
 // Create user
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // Create user configuration here
 });
 // Get users
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    server_1.con.query('SELECT * FROM `user_info`', (err, result) => {
-        if (err) {
-            next(err);
-        }
-        else {
-            res.status(200).json({
-                success: true,
-                message: 'User info fetched successfully',
-                result: result,
-            });
-        }
-    });
+    const userQuery = 'SELECT * FROM `user_info`';
+    try {
+        const userResult = yield (0, dbQuery_1.default)(userQuery);
+        res.status(200).json({
+            success: true,
+            message: 'User info fetched successfully',
+            users: userResult
+        });
+    }
+    catch (err) {
+        next(err);
+    }
 });
 /**
  * JWT GENERATE TOKEN WHEN SIGN IN USER

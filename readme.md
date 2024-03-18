@@ -2,6 +2,8 @@
 
 ### New Features
    - Server created with Node, Express, TypeScript (JS), MySQL
+   - `lib/dbQuery` > executeQuery() function takes a query string and returns result
+     - Any types of query string you can pass eg. `SELECT * FROM user_info`
 
 ### Installed packages (NPM)
    - "cors": "^2.8.5"
