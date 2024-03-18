@@ -16,7 +16,7 @@ exports.userController = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const upload_1 = __importDefault(require("../../utils/fileManagement/upload"));
 const deleteFile_1 = __importDefault(require("../../utils/fileManagement/deleteFile"));
-const dbQuery_1 = __importDefault(require("../../lib/dbQuery/dbQuery"));
+const queryCollection_1 = require("../../lib/dbQuery/queryCollection");
 // Create user
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // Create user configuration here
@@ -25,7 +25,7 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const userQuery = 'SELECT * FROM `user_info`';
     try {
-        const userResult = yield (0, dbQuery_1.default)(userQuery);
+        const userResult = yield queryCollection_1.Query.filterTable('user_info');
         res.status(200).json({
             success: true,
             message: 'User info fetched successfully',

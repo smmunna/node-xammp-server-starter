@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import upload from "../../utils/fileManagement/upload";
 import deleteFile from "../../utils/fileManagement/deleteFile";
-import executeQuery from "../../lib/dbQuery/dbQuery";
+import { Query } from "../../lib/dbQuery/queryCollection";
 
 // Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -14,7 +14,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     const userQuery = 'SELECT * FROM `user_info`';
     try {
-        const userResult = await executeQuery(userQuery);
+        const userResult = await Query.filterTable('user_info');
 
         res.status(200).json({
             success: true,
