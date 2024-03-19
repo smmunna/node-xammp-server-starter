@@ -21,7 +21,11 @@ const verifyToken = (req, res, next) => {
         });
     }
     else {
-        return res.status(401).json({ message: 'Authorization header missing or invalid' });
+        return res.status(401).json({
+            success: false,
+            info: 'Authorization header missing or invalid',
+            message: 'Unauthorized user'
+        });
     }
 };
 exports.default = verifyToken;

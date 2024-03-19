@@ -18,7 +18,11 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
         });
     }
     else {
-        return res.status(401).json({ message: 'Authorization header missing or invalid' });
+        return res.status(401).json({
+            success: false,
+            info: 'Authorization header missing or invalid',
+            message: 'Unauthorized user'
+        });
     }
 }
 
