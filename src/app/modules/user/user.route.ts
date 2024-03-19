@@ -7,7 +7,7 @@ const router = express.Router()
 
 router.post('/', userController.createUser)
 router.post('/login', userController.signInUser)
-router.get('/', verifyToken, isAdmin, userController.getUsers)
+router.get('/', userController.getUsers)
 // File Management Routes
 router.post('/upload', userController.fileUpload)
 router.delete('/delete/:filename', userController.deleteFileData)
@@ -17,6 +17,6 @@ router.delete('/delete/:filename', userController.deleteFileData)
  * --------------------------------
  * */
 
-// router.get('/', verifyToken, userController.getUsers)
+// router.get('/', verifyToken, isAdmin,  userController.getUsers)
 
 export const userRoutes = router;
