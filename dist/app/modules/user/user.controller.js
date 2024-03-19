@@ -23,9 +23,9 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 });
 // Get users
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const userQuery = 'SELECT * FROM `user_info`';
+    const userQuery = 'SELECT COUNT(email) FROM `user_info`';
     try {
-        const userResult = yield queryCollection_1.Query.filterTable('user_info');
+        const userResult = yield queryCollection_1.Query.like('user_info', 'email', 'mu');
         res.status(200).json({
             success: true,
             message: 'User info fetched successfully',
