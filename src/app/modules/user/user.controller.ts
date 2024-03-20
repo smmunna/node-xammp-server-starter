@@ -58,8 +58,6 @@ const signInUser = async (req: Request, res: Response, next: NextFunction) => {
     });
 }
 
-
-
 // File Uploading
 const fileUpload = async (req: Request, res: Response) => {
 
@@ -98,11 +96,12 @@ const deleteFileData = (req: Request, res: Response) => {
     });
 }
 
+
 // These are accessible from different files.
 export const userController = {
     createUser,
     getUsers,
     signInUser,
     fileUpload,
-    deleteFileData
+    deleteFileData,
 }

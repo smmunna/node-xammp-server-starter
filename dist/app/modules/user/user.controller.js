@@ -102,5 +102,5 @@ exports.userController = {
     getUsers,
     signInUser,
     fileUpload,
-    deleteFileData
+    deleteFileData,
 };

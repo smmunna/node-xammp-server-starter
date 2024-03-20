@@ -13,6 +13,7 @@ app.use((0, cors_1.default)());
 app.use('/uploads', express_1.default.static('uploads'));
 // Route handlings;
 app.use('/api/v1/users', user_route_1.userRoutes);
+// SSL Commerze or any redirect routes will be Here, from controller with functions
 app.get('/', (req, res) => {
     res.status(200).json({
         success: true,
