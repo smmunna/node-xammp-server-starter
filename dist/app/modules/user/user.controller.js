@@ -14,9 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userController = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const upload_1 = __importDefault(require("../../utils/fileManagement/upload"));
 const deleteFile_1 = __importDefault(require("../../utils/fileManagement/deleteFile"));
 const queryCollection_1 = require("../../lib/dbQuery/queryCollection");
+const upload_config_1 = require("../../utils/fileManagement/upload.config");
 // Create user
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // Create user configuration here
@@ -63,7 +63,7 @@ const signInUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 // File Uploading
 const fileUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        upload_1.default.single('photo')(req, res, (err) => {
+        upload_config_1.fileUpload.single('file')(req, res, (err) => {
             if (err) {
                 return res.status(400).send(err.message);
             }
@@ -74,7 +74,7 @@ const fileUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             res.status(200).json({
                 message: 'Photo uploaded successfully',
                 file: uploadedFile,
-                nextUrl: `${req.protocol}://${req.get('host')}/` + (uploadedFile === null || uploadedFile === void 0 ? void 0 : uploadedFile.path.replace(/\\/g, "/")) //use protocol `https://` use extra s
+                photoURL: `${req.protocol}://${req.get('host')}/` + (uploadedFile === null || uploadedFile === void 0 ? void 0 : uploadedFile.path.replace(/\\/g, "/")) //use protocol `https://` use extra s
             });
         });
     }
@@ -85,15 +85,14 @@ const fileUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 // File Deleting
 const deleteFileData = (req, res) => {
-    const filename = req.params.filename;
-    // console.log(filename);
-    // Call deleteFile function with filename and handle the result
-    (0, deleteFile_1.default)(filename, (error, message) => {
+    const directoryPath = 'uploads/documents'; // Pass the directory path here
+    const fileName = req.params.filename; // Pass the file name here
+    (0, deleteFile_1.default)(directoryPath, fileName, (error, message) => {
         if (error) {
-            res.status(500).send({ message: error.message }); // Handle error
+            res.status(404).send({ message: error.message });
         }
         else {
-            res.send({ message: message }); // File deletion successful
+            res.status(200).send({ message: message }); // File deletion successful
         }
     });
 };

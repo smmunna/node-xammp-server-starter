@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import upload from "../../utils/fileManagement/upload";
 import deleteFile from "../../utils/fileManagement/deleteFile";
 import { Query } from "../../lib/dbQuery/queryCollection";
+import { documentUpload, photoUpload, fileUpload as myFileUpload } from "../../utils/fileManagement/upload.config";
 
 // Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -14,7 +14,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     const userQuery = 'SELECT COUNT(email) FROM `user_info`';
     try {
-        const userResult = await Query.like('user_info','email','mu');
+        const userResult = await Query.like('user_info', 'email', 'mu');
 
         res.status(200).json({
             success: true,
@@ -59,11 +59,12 @@ const signInUser = async (req: Request, res: Response, next: NextFunction) => {
 }
 
 
+
 // File Uploading
 const fileUpload = async (req: Request, res: Response) => {
 
     try {
-        upload.single('photo')(req, res, (err: any) => {
+        myFileUpload.single('file')(req, res, (err: any) => {
             if (err) {
                 return res.status(400).send(err.message);
             }
@@ -75,7 +76,7 @@ const fileUpload = async (req: Request, res: Response) => {
             res.status(200).json({
                 message: 'Photo uploaded successfully',
                 file: uploadedFile,
-                nextUrl: `${req.protocol}://${req.get('host')}/` + uploadedFile?.path.replace(/\\/g, "/") //use protocol `https://` use extra s
+                photoURL: `${req.protocol}://${req.get('host')}/` + uploadedFile?.path.replace(/\\/g, "/") //use protocol `https://` use extra s
             });
         });
     } catch (error) {
@@ -86,19 +87,15 @@ const fileUpload = async (req: Request, res: Response) => {
 
 // File Deleting
 const deleteFileData = (req: Request, res: Response) => {
-    const filename = req.params.filename;
-    // console.log(filename);
-
-    // Call deleteFile function with filename and handle the result
-    deleteFile(filename, (error, message) => {
+    const directoryPath = 'uploads/documents'; // Pass the directory path here
+    const fileName = req.params.filename; // Pass the file name here
+    deleteFile(directoryPath, fileName, (error, message) => {
         if (error) {
-            res.status(500).send({ message: error.message }); // Handle error
+            res.status(404).send({ message: error.message });
         } else {
-            res.send({ message: message }); // File deletion successful
+            res.status(200).send({ message: message }); // File deletion successful
         }
     });
-
-
 }
 
 // These are accessible from different files.

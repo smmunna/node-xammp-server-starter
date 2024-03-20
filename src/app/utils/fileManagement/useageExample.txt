@@ -1,0 +1,53 @@
+-----------------------------------Usage Example for Uploading File-------------------------------------------------
+1. Importing the function which you want to upload
+
+import { documentUpload, photoUpload, fileUpload as myFileUpload } from "../../utils/fileManagement/upload.config";
+
+2. Create a controller to upload
+
+// File Uploading
+const fileUpload = async (req: Request, res: Response) => {
+
+    try {
+        myFileUpload.single('file')(req, res, (err: any) => {
+            if (err) {
+                return res.status(400).send(err.message);
+            }
+            const uploadedFile = req.file;
+            // const other = req.body.name;
+            // console.log(other)
+
+            // Respond with the uploaded file in the response
+            res.status(200).json({
+                message: 'Photo uploaded successfully',
+                file: uploadedFile,
+                photoURL: `${req.protocol}://${req.get('host')}/` + uploadedFile?.path.replace(/\\/g, "/") //use protocol `https://` use extra s
+            });
+        });
+    } catch (error) {
+        console.error('Error in userPhoto controller:', error);
+        res.status(500).send('Internal Server Error');
+    }
+}
+
+3. Make the router for this controller 
+router.post('/upload', userController.fileUpload)
+
+-------------------------------Delete the uploaded file-------------------------------
+1. Following this code in controller just call the deleteFile function
+
+// File Deleting
+const deleteFileData = (req: Request, res: Response) => {
+    const directoryPath = 'uploads/documents'; // Pass the directory path here
+    const fileName = req.params.filename; // Pass the file name here
+    deleteFile(directoryPath, fileName, (error, message) => {
+        if (error) {
+            res.status(404).send({ message: error.message });
+        } else {
+            res.status(200).send({ message: message }); // File deletion successful
+        }
+    });
+}
+
+2. And Make the router for this 
+router.delete('/delete/:filename', userController.deleteFileData)
