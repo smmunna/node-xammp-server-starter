@@ -13,6 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const nodemailer_1 = __importDefault(require("nodemailer"));
+/**
+ * Sending Email with Nodemailer
+ * @param receiver -  Write recevier email address
+ * @param sender -  Write sender email address
+ * @param subject -  Write subject
+ * @param message -  Write message, that can be used as plain text or using html
+ * */
 const sendEmail = (receiver, sender, subject, message) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transporter = nodemailer_1.default.createTransport({
