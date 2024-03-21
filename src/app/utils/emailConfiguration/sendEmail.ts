@@ -1,5 +1,11 @@
 import nodemailer from 'nodemailer';
-
+/**
+ * Sending Email with Nodemailer
+ * @param receiver -  Write recevier email address
+ * @param sender -  Write sender email address
+ * @param subject -  Write subject
+ * @param message -  Write message, that can be used as plain text or using html 
+ * */ 
 const sendEmail = async (receiver: any, sender: any, subject: any, message: any) => {
     try {
         const transporter = nodemailer.createTransport({

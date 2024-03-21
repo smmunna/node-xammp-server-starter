@@ -2,7 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import deleteFile from "../../utils/fileManagement/deleteFile";
 import { Query } from "../../lib/dbQuery/queryCollection";
-import { documentUpload, photoUpload, fileUpload as myFileUpload } from "../../utils/fileManagement/upload.config";
+import { fileUpload as myFileUpload } from "../../utils/fileManagement/upload.config";
+
 
 // Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
