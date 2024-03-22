@@ -13,6 +13,8 @@
       const newQuery = 'SELECT COUNT(*) FROM `user_info`';
      ```
     - SSLCommerze configured 
+    - PayPal configured
+    - Database table validation added
   
 ### Installed packages (NPM)
    - "cors": "^2.8.5"

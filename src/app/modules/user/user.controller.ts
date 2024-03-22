@@ -4,13 +4,10 @@ import deleteFile from "../../utils/fileManagement/deleteFile";
 import { Query } from "../../lib/dbQuery/queryCollection";
 import { fileUpload as myFileUpload } from "../../utils/fileManagement/upload.config";
 
-// Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
-    // Create user configuration here
 
-}
+};
 
-// Get users
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     const userQuery = 'SELECT COUNT(email) FROM `user_info`';
     try {
@@ -26,7 +23,6 @@ const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     }
 
 };
-
 
 /**
  * JWT GENERATE TOKEN WHEN SIGN IN USER

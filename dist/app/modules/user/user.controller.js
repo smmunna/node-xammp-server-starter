@@ -17,11 +17,8 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const deleteFile_1 = __importDefault(require("../../utils/fileManagement/deleteFile"));
 const queryCollection_1 = require("../../lib/dbQuery/queryCollection");
 const upload_config_1 = require("../../utils/fileManagement/upload.config");
-// Create user
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    // Create user configuration here
 });
-// Get users
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const userQuery = 'SELECT COUNT(email) FROM `user_info`';
     try {
