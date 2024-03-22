@@ -4,7 +4,6 @@ import deleteFile from "../../utils/fileManagement/deleteFile";
 import { Query } from "../../lib/dbQuery/queryCollection";
 import { fileUpload as myFileUpload } from "../../utils/fileManagement/upload.config";
 
-
 // Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
     // Create user configuration here
@@ -96,7 +95,6 @@ const deleteFileData = (req: Request, res: Response) => {
         }
     });
 }
-
 
 // These are accessible from different files.
 export const userController = {

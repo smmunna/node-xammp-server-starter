@@ -14,7 +14,6 @@ app.use('/api/v1/users', userRoutes)
 
 // SSL Commerze or any redirect routes will be Here, from controller with functions
 
-
 app.get('/', (req: Request, res: Response) => {
     res.status(200).json({
         success: true,

@@ -14,6 +14,7 @@ router.get('/', user_controller_1.userController.getUsers);
 router.post('/upload', user_controller_1.userController.fileUpload);
 router.delete('/delete/:filename', user_controller_1.userController.deleteFileData);
 // Payment Gateway Routes
+router.post('/payment', user_controller_1.userController.payment);
 // Redirect URL will be in app.ts file, Here redirect URL will not work
 /**
  * MIDDLEWARE CONFIGURATION
