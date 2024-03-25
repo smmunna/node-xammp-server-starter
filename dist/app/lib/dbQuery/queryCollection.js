@@ -194,6 +194,53 @@ const like = (tableName_5, columnName_4, searchTerm_1, ...args_5) => __awaiter(v
     const result = yield executeQuery(query);
     return result;
 });
+/**
+ * Execute an IN query to filter rows based on specified values in a column.
+ * @param {string} tableName - The name of the table.
+ * @param {string} columnName - The name of the column to filter.
+ * @param {string[]} values - Array of values to filter for.
+ * @returns {Promise<any>} A Promise that resolves to the matching rows.
+ */
+const iN = (tableName, columnName, values) => __awaiter(void 0, void 0, void 0, function* () {
+    // Constructing the IN clause with provided values
+    const inClause = values.map(value => `'${value}'`).join(', ');
+    // Constructing the SQL query
+    const query = `SELECT * FROM ${tableName} WHERE ${columnName} IN (${inClause})`;
+    // Execute the query and return the result
+    const result = yield executeQuery(query);
+    return result;
+});
+/**
+ * Execute an IN query to filter rows based on specified values in a column.
+ * @param {string} tableName - The name of the table.
+ * @param {string} columnName - The name of the column to filter.
+ * @param {string[]} values - Array of values to filter for.
+ * @returns {Promise<any>} A Promise that resolves to the matching rows.
+ */
+const notIN = (tableName, columnName, values) => __awaiter(void 0, void 0, void 0, function* () {
+    // Constructing the IN clause with provided values
+    const inClause = values.map(value => `'${value}'`).join(', ');
+    // Constructing the SQL query
+    const query = `SELECT * FROM ${tableName} WHERE ${columnName} NOT IN (${inClause})`;
+    // Execute the query and return the result
+    const result = yield executeQuery(query);
+    return result;
+});
+/**
+ * Execute a BETWEEN query to filter rows based on a range of values in a column.
+ * @param {string} tableName - The name of the table.
+ * @param {string} columnName - The name of the column to filter.
+ * @param {string} value1 - The lower bound value.
+ * @param {string} value2 - The upper bound value.
+ * @returns {Promise<any>} A Promise that resolves to the matching rows.
+ */
+const between = (tableName, columnName, value1, value2) => __awaiter(void 0, void 0, void 0, function* () {
+    // Constructing the SQL query
+    const query = `SELECT * FROM ${tableName} WHERE ${columnName} BETWEEN '${value1}' AND '${value2}'`;
+    // Execute the query and return the result
+    const result = yield executeQuery(query);
+    return result;
+});
 exports.Query = {
     executeQuery,
     selectAll,
@@ -207,4 +254,7 @@ exports.Query = {
     min,
     max,
     like,
+    iN,
+    notIN,
+    between,
 };

@@ -206,6 +206,64 @@ const like = async (tableName: string, columnName: string, searchTerm: string, a
     return result;
 };
 
+/**
+ * Execute an IN query to filter rows based on specified values in a column.
+ * @param {string} tableName - The name of the table.
+ * @param {string} columnName - The name of the column to filter.
+ * @param {string[]} values - Array of values to filter for.
+ * @returns {Promise<any>} A Promise that resolves to the matching rows.
+ */
+const iN = async (tableName: string, columnName: string, values: string[]): Promise<any> => {
+    // Constructing the IN clause with provided values
+    const inClause = values.map(value => `'${value}'`).join(', ');
+
+    // Constructing the SQL query
+    const query = `SELECT * FROM ${tableName} WHERE ${columnName} IN (${inClause})`;
+
+    // Execute the query and return the result
+    const result = await executeQuery(query);
+    return result;
+};
+
+/**
+ * Execute an IN query to filter rows based on specified values in a column.
+ * @param {string} tableName - The name of the table.
+ * @param {string} columnName - The name of the column to filter.
+ * @param {string[]} values - Array of values to filter for.
+ * @returns {Promise<any>} A Promise that resolves to the matching rows.
+ */
+const notIN = async (tableName: string, columnName: string, values: string[]): Promise<any> => {
+    // Constructing the IN clause with provided values
+    const inClause = values.map(value => `'${value}'`).join(', ');
+
+    // Constructing the SQL query
+    const query = `SELECT * FROM ${tableName} WHERE ${columnName} NOT IN (${inClause})`;
+
+    // Execute the query and return the result
+    const result = await executeQuery(query);
+    return result;
+};
+
+
+/**
+ * Execute a BETWEEN query to filter rows based on a range of values in a column.
+ * @param {string} tableName - The name of the table.
+ * @param {string} columnName - The name of the column to filter.
+ * @param {string} value1 - The lower bound value.
+ * @param {string} value2 - The upper bound value.
+ * @returns {Promise<any>} A Promise that resolves to the matching rows.
+ */
+const between = async (tableName: string, columnName: string, value1: string, value2: string): Promise<any> => {
+    // Constructing the SQL query
+    const query = `SELECT * FROM ${tableName} WHERE ${columnName} BETWEEN '${value1}' AND '${value2}'`;
+
+    // Execute the query and return the result
+    const result = await executeQuery(query);
+    return result;
+};
+
+
+
 
 
 
@@ -222,4 +280,7 @@ export const Query = {
     min,
     max,
     like,
+    iN,
+    notIN,
+    between,
 }

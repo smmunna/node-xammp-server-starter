@@ -11,7 +11,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     const userQuery = 'SELECT COUNT(email) FROM `user_info`';
     try {
-        const userResult = await Query.like('user_info', 'email', 'mu');
+        const userResult = await Query.selectAll('user_info');
 
         res.status(200).json({
             success: true,
