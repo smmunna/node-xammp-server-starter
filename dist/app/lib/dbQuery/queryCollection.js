@@ -64,13 +64,15 @@ const selectAllOrderBy = (tableName, columnName, orderBy) => __awaiter(void 0, v
  * @param {string} tableName - The name of the table from which data will be paginated.
  * @param {number} pageNumber - The page number.
  * @param {number} itemsPerPage - The number of items per page.
+ * @param {string[]} [columns] - Optional array of column names to fetch. If not provided, all columns will be fetched.
  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
  */
-const Paginate = (tableName, pageNumber, itemsPerPage) => __awaiter(void 0, void 0, void 0, function* () {
+const Paginate = (tableName, pageNumber, itemsPerPage, columns) => __awaiter(void 0, void 0, void 0, function* () {
     const offset = (pageNumber - 1) * itemsPerPage;
     const limit = itemsPerPage;
+    const columnSelection = columns && columns.length > 0 ? columns.join(', ') : '*'; // Construct column selection
     const countQuery = `SELECT COUNT(*) AS total FROM ${tableName}`;
-    const dataQuery = `SELECT * FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`;
+    const dataQuery = `SELECT ${columnSelection} FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`;
     // Execute the count query to get total items
     const countResult = yield executeQuery(countQuery);
     const total = countResult[0].total;

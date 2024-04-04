@@ -11,7 +11,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
     const userQuery = 'SELECT COUNT(email) FROM `user_info`';
     try {
-        const userResult = await Query.selectAll('user_info');
+        const userResult = await Query.Paginate('users',1,4);
 
         res.status(200).json({
             success: true,

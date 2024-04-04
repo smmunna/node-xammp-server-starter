@@ -3,9 +3,11 @@ import { Query } from "../lib/dbQuery/queryCollection";
 
 // Middleware for admin role
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
-    const email = req.query.email;
-    const user = await Query.selectOne('user_info', 'email', email);
+    const email = req.email; // Accessing email from the request object
+    // console.log(email)
 
+    // Assuming Query is imported properly
+    const user = await Query.selectOne('users', 'email', email);
     // Check if user exists and has a role
     if (user && user.role === 'admin') {
         next(); // Grant access for admin
@@ -17,10 +19,11 @@ export const isAdmin = async (req: Request, res: Response, next: NextFunction) =
     }
 }
 
+
 // Middleware for user role
 export const isUser = async (req: Request, res: Response, next: NextFunction) => {
-    const email = req.query.email;
-    const user = await Query.selectOne('user_info', 'email', email);
+    const email = req.email;
+    const user = await Query.selectOne('users', 'email', email);
 
     // Check if user exists and has a role
     if (user && user.role === 'user') {
@@ -32,3 +35,5 @@ export const isUser = async (req: Request, res: Response, next: NextFunction) =>
         });
     }
 }
+
+// Many more roles ....... you can add.

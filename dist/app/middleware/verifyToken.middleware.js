@@ -15,7 +15,10 @@ const verifyToken = (req, res, next) => {
             else {
                 // If token is valid, you can access the decoded payload here
                 const userInfo = decoded;
+                // Adding user email to the request object
                 // console.log(userInfo)
+                // Send the email to Next Middleware    
+                req.email = userInfo.user;
                 next();
             }
         });

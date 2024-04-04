@@ -13,8 +13,10 @@ exports.isUser = exports.isAdmin = void 0;
 const queryCollection_1 = require("../lib/dbQuery/queryCollection");
 // Middleware for admin role
 const isAdmin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const email = req.query.email;
-    const user = yield queryCollection_1.Query.selectOne('user_info', 'email', email);
+    const email = req.email; // Accessing email from the request object
+    // console.log(email)
+    // Assuming Query is imported properly
+    const user = yield queryCollection_1.Query.selectOne('users', 'email', email);
     // Check if user exists and has a role
     if (user && user.role === 'admin') {
         next(); // Grant access for admin
@@ -29,8 +31,8 @@ const isAdmin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* 
 exports.isAdmin = isAdmin;
 // Middleware for user role
 const isUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const email = req.query.email;
-    const user = yield queryCollection_1.Query.selectOne('user_info', 'email', email);
+    const email = req.email;
+    const user = yield queryCollection_1.Query.selectOne('users', 'email', email);
     // Check if user exists and has a role
     if (user && user.role === 'user') {
         next(); // Grant access for admin
@@ -43,3 +45,4 @@ const isUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.isUser = isUser;
+// Many more roles ....... you can add.
