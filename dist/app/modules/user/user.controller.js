@@ -22,7 +22,7 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const userQuery = 'SELECT COUNT(email) FROM `user_info`';
     try {
-        const userResult = yield queryCollection_1.Query.Paginate('users', 1, 4);
+        const userResult = yield queryCollection_1.Query.selectAll('users');
         res.status(200).json({
             success: true,
             message: 'User info fetched successfully',

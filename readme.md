@@ -14,7 +14,9 @@
      ```
     - SSLCommerze configured 
     - PayPal configured
+    - Stripe configured
     - Database table validation added
+    - Api request limit added
   
 ### Installed packages (NPM)
    - "cors": "^2.8.5"
@@ -27,6 +29,9 @@
    - "multer": "^1.4.5-lts.1"
    - "nodemailer": "^6.9.12"
    - "sslcommerz-lts":
+   - paypal
+   - stripe
+   - express-rate-limit: "^7.2.0"
 
 ### Folder Structures
    - `dist` > compiled the src folder all files
