@@ -40,6 +40,19 @@ const selectOne = async (tableName: string, columnName: string, condition: any):
 }
 
 /**
+ * Selects a single record from a table based on a condition.
+ * @param {string} tableName - The name of the table.
+ * @param {string} columnName[] - The name of the column, specify your column.
+ * @param {any} condition - The condition for selection.
+ * @returns {Promise<any>} A Promise that resolves to the single result based on the query parameters.
+ */
+const selectOneWithColumn = async (tableName: string, columns: string[] = ['*'], columnName: string = '', condition: any): Promise<any> => {
+    const selectedColumns = columns.join(', ');
+    const query = `SELECT ${selectedColumns} FROM ${tableName} WHERE ${columnName} = ${con.escape(condition)}`;
+    return executeQuery(query).then(result => result[0]);
+}
+
+/**
  * Selects all records from a table and orders them.
  * @param {string} tableName - The name of the table.
  * @param {string} columnName - The name of the column to order by.
@@ -51,21 +64,70 @@ const selectAllOrderBy = async (tableName: string, columnName: string, orderBy: 
     return executeQuery(query);
 }
 
+// /**
+//  * Paginates data from a specified table in the database.
+//  * @param {string} tableName - The name of the table from which data will be paginated.
+//  * @param {number} pageNumber - The page number.
+//  * @param {number} itemsPerPage - The number of items per page.
+//  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
+//  */
+// const Paginate = async (tableName: string, pageNumber: number, itemsPerPage: number): Promise<{ total: number, offset: number, limit: number, data: any[] }> => {
+//     const offset = (pageNumber - 1) * itemsPerPage;
+//     const limit = itemsPerPage;
+//     const countQuery = `SELECT COUNT(*) AS total FROM ${tableName}`;
+//     const dataQuery = `SELECT * FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`;
+
+//     // Execute the count query to get total items
+//     const countResult = await executeQuery(countQuery);
+//     const total = countResult[0].total;
+
+//     // Execute the data query to retrieve paginated data
+//     const data = await executeQuery(dataQuery);
+
+//     return { total, offset, limit, data };
+// }
+
 /**
  * Paginates data from a specified table in the database.
  * @param {string} tableName - The name of the table from which data will be paginated.
  * @param {number} pageNumber - The page number.
  * @param {number} itemsPerPage - The number of items per page.
  * @param {string[]} [columns] - Optional array of column names to fetch. If not provided, all columns will be fetched.
+ * @param {string} [orderByColumn] - Optional parameter to specify the column to order by.
+ * @param {string} [orderByDirection] - Optional parameter to specify the order direction (ASC or DESC).
+ * @param {Record<string, any>} [searchParams] - Optional object containing search parameters for each column.
  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
  */
-const Paginate = async (tableName: string, pageNumber: number, itemsPerPage: number, columns?: string[]): Promise<{ total: number, offset: number, limit: number, data: any[] }> => {
+const Paginate = async (
+    tableName: string,
+    pageNumber: number,
+    itemsPerPage: number,
+    columns?: string[],
+    orderByColumn?: string,
+    orderByDirection?: 'ASC' | 'DESC',
+    searchParams?: Record<string, any>
+): Promise<{ total: number; offset: number; limit: number; data: any[] }> => {
     const offset = (pageNumber - 1) * itemsPerPage;
     const limit = itemsPerPage;
     const columnSelection = columns && columns.length > 0 ? columns.join(', ') : '*'; // Construct column selection
+    let orderByClause = ''; // Initialize order by clause
+    let whereClause = ''; // Initialize where clause
 
-    const countQuery = `SELECT COUNT(*) AS total FROM ${tableName}`;
-    const dataQuery = `SELECT ${columnSelection} FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`;
+    // Construct order by clause if both orderByColumn and orderByDirection are provided
+    if (orderByColumn && orderByDirection) {
+        orderByClause = `ORDER BY ${orderByColumn} ${orderByDirection}`;
+    }
+
+    // Construct where clause based on search parameters
+    if (searchParams) {
+        const conditions = Object.entries(searchParams)
+            .map(([column, value]) => `${column} LIKE '%${value}%'`)
+            .join(' OR ');
+        whereClause = `WHERE ${conditions}`;
+    }
+
+    const countQuery = `SELECT COUNT(*) AS total FROM ${tableName} ${whereClause}`;
+    const dataQuery = `SELECT ${columnSelection} FROM ${tableName} ${whereClause} ${orderByClause} LIMIT ${limit} OFFSET ${offset}`;
 
     // Execute the count query to get total items
     const countResult = await executeQuery(countQuery);
@@ -76,6 +138,10 @@ const Paginate = async (tableName: string, pageNumber: number, itemsPerPage: num
 
     return { total, offset, limit, data };
 };
+
+
+
+
 
 /**
  * Retrieve filtered columns from a table.
@@ -267,13 +333,11 @@ const between = async (tableName: string, columnName: string, value1: string, va
 
 
 
-
-
-
 export const Query = {
     executeQuery,
     selectAll,
     selectOne,
+    selectOneWithColumn,
     selectAllOrderBy,
     Paginate,
     filterTable,

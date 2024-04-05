@@ -17,6 +17,7 @@
     - Stripe configured
     - Database table validation added
     - Api request limit added
+    - Secured Server from any attacks 
   
 ### Installed packages (NPM)
    - "cors": "^2.8.5"
@@ -32,6 +33,7 @@
    - paypal
    - stripe
    - express-rate-limit: "^7.2.0"
+   - helmet
 
 ### Folder Structures
    - `dist` > compiled the src folder all files

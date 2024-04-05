@@ -49,6 +49,18 @@ const selectOne = (tableName, columnName, condition) => __awaiter(void 0, void 0
     return executeQuery(query).then(result => result[0]);
 });
 /**
+ * Selects a single record from a table based on a condition.
+ * @param {string} tableName - The name of the table.
+ * @param {string} columnName[] - The name of the column, specify your column.
+ * @param {any} condition - The condition for selection.
+ * @returns {Promise<any>} A Promise that resolves to the single result based on the query parameters.
+ */
+const selectOneWithColumn = (tableName_1, ...args_1) => __awaiter(void 0, [tableName_1, ...args_1], void 0, function* (tableName, columns = ['*'], columnName = '', condition) {
+    const selectedColumns = columns.join(', ');
+    const query = `SELECT ${selectedColumns} FROM ${tableName} WHERE ${columnName} = ${server_1.con.escape(condition)}`;
+    return executeQuery(query).then(result => result[0]);
+});
+/**
  * Selects all records from a table and orders them.
  * @param {string} tableName - The name of the table.
  * @param {string} columnName - The name of the column to order by.
@@ -59,20 +71,55 @@ const selectAllOrderBy = (tableName, columnName, orderBy) => __awaiter(void 0, v
     const query = `SELECT * FROM ${tableName} ORDER BY ${columnName} ${orderBy}`;
     return executeQuery(query);
 });
+// /**
+//  * Paginates data from a specified table in the database.
+//  * @param {string} tableName - The name of the table from which data will be paginated.
+//  * @param {number} pageNumber - The page number.
+//  * @param {number} itemsPerPage - The number of items per page.
+//  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
+//  */
+// const Paginate = async (tableName: string, pageNumber: number, itemsPerPage: number): Promise<{ total: number, offset: number, limit: number, data: any[] }> => {
+//     const offset = (pageNumber - 1) * itemsPerPage;
+//     const limit = itemsPerPage;
+//     const countQuery = `SELECT COUNT(*) AS total FROM ${tableName}`;
+//     const dataQuery = `SELECT * FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`;
+//     // Execute the count query to get total items
+//     const countResult = await executeQuery(countQuery);
+//     const total = countResult[0].total;
+//     // Execute the data query to retrieve paginated data
+//     const data = await executeQuery(dataQuery);
+//     return { total, offset, limit, data };
+// }
 /**
  * Paginates data from a specified table in the database.
  * @param {string} tableName - The name of the table from which data will be paginated.
  * @param {number} pageNumber - The page number.
  * @param {number} itemsPerPage - The number of items per page.
  * @param {string[]} [columns] - Optional array of column names to fetch. If not provided, all columns will be fetched.
+ * @param {string} [orderByColumn] - Optional parameter to specify the column to order by.
+ * @param {string} [orderByDirection] - Optional parameter to specify the order direction (ASC or DESC).
+ * @param {Record<string, any>} [searchParams] - Optional object containing search parameters for each column.
  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
  */
-const Paginate = (tableName, pageNumber, itemsPerPage, columns) => __awaiter(void 0, void 0, void 0, function* () {
+const Paginate = (tableName, pageNumber, itemsPerPage, columns, orderByColumn, orderByDirection, searchParams) => __awaiter(void 0, void 0, void 0, function* () {
     const offset = (pageNumber - 1) * itemsPerPage;
     const limit = itemsPerPage;
     const columnSelection = columns && columns.length > 0 ? columns.join(', ') : '*'; // Construct column selection
-    const countQuery = `SELECT COUNT(*) AS total FROM ${tableName}`;
-    const dataQuery = `SELECT ${columnSelection} FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`;
+    let orderByClause = ''; // Initialize order by clause
+    let whereClause = ''; // Initialize where clause
+    // Construct order by clause if both orderByColumn and orderByDirection are provided
+    if (orderByColumn && orderByDirection) {
+        orderByClause = `ORDER BY ${orderByColumn} ${orderByDirection}`;
+    }
+    // Construct where clause based on search parameters
+    if (searchParams) {
+        const conditions = Object.entries(searchParams)
+            .map(([column, value]) => `${column} LIKE '%${value}%'`)
+            .join(' OR ');
+        whereClause = `WHERE ${conditions}`;
+    }
+    const countQuery = `SELECT COUNT(*) AS total FROM ${tableName} ${whereClause}`;
+    const dataQuery = `SELECT ${columnSelection} FROM ${tableName} ${whereClause} ${orderByClause} LIMIT ${limit} OFFSET ${offset}`;
     // Execute the count query to get total items
     const countResult = yield executeQuery(countQuery);
     const total = countResult[0].total;
@@ -91,7 +138,7 @@ const Paginate = (tableName, pageNumber, itemsPerPage, columns) => __awaiter(voi
  * @param {number} [limit=null] - Maximum number of rows to return (default: null, meaning no limit).
  * @returns {Promise<any[]>} A Promise that resolves to the selected columns' data.
  */
-const filterTable = (tableName_1, ...args_1) => __awaiter(void 0, [tableName_1, ...args_1], void 0, function* (tableName, columns = [], condition = '', distinct = false, orderBy = '', orderByColumn = '', limit = null) {
+const filterTable = (tableName_2, ...args_2) => __awaiter(void 0, [tableName_2, ...args_2], void 0, function* (tableName, columns = [], condition = '', distinct = false, orderBy = '', orderByColumn = '', limit = null) {
     // Generate the SELECT clause
     let selectClause = distinct ? 'SELECT DISTINCT ' : 'SELECT ';
     selectClause += columns.length > 0 ? columns.join(', ') : '*';
@@ -150,7 +197,7 @@ const avg = (tableName, columnName) => __awaiter(void 0, void 0, void 0, functio
  * @param {string} [alias=''] - An alias for the minimum value.
  * @returns {Promise<any>} A Promise that resolves to the minimum value.
  */
-const min = (tableName_2, columnName_1, ...args_2) => __awaiter(void 0, [tableName_2, columnName_1, ...args_2], void 0, function* (tableName, columnName, alias = '') {
+const min = (tableName_3, columnName_1, ...args_3) => __awaiter(void 0, [tableName_3, columnName_1, ...args_3], void 0, function* (tableName, columnName, alias = '') {
     const query = `SELECT MIN(${columnName})${alias ? ` AS ${alias}` : ''} FROM ${tableName}`;
     const result = yield executeQuery(query);
     return result[0];
@@ -162,7 +209,7 @@ const min = (tableName_2, columnName_1, ...args_2) => __awaiter(void 0, [tableNa
  * @param {string} [alias=''] - An alias for the maximum value.
  * @returns {Promise<any>} A Promise that resolves to the maximum value.
  */
-const max = (tableName_3, columnName_2, ...args_3) => __awaiter(void 0, [tableName_3, columnName_2, ...args_3], void 0, function* (tableName, columnName, alias = '') {
+const max = (tableName_4, columnName_2, ...args_4) => __awaiter(void 0, [tableName_4, columnName_2, ...args_4], void 0, function* (tableName, columnName, alias = '') {
     const query = `SELECT MAX(${columnName})${alias ? ` AS ${alias}` : ''} FROM ${tableName}`;
     const result = yield executeQuery(query);
     return result[0];
@@ -175,7 +222,7 @@ const max = (tableName_3, columnName_2, ...args_3) => __awaiter(void 0, [tableNa
  * @param {boolean} [distinct=false] - Whether to count distinct values (default: false).
  * @returns {Promise<any>} A Promise that resolves to the count result.
  */
-const count = (tableName_4, columnName_3, ...args_4) => __awaiter(void 0, [tableName_4, columnName_3, ...args_4], void 0, function* (tableName, columnName, alias = '', distinct = false) {
+const count = (tableName_5, columnName_3, ...args_5) => __awaiter(void 0, [tableName_5, columnName_3, ...args_5], void 0, function* (tableName, columnName, alias = '', distinct = false) {
     let query = `SELECT COUNT(`;
     query += distinct ? `DISTINCT ${columnName})` : `${columnName})`;
     query += alias ? ` AS ${alias}` : '';
@@ -191,7 +238,7 @@ const count = (tableName_4, columnName_3, ...args_4) => __awaiter(void 0, [table
  * @param {string} [alias=''] - An alias for the result.
  * @returns {Promise<any>} A Promise that resolves to the matching rows.
  */
-const like = (tableName_5, columnName_4, searchTerm_1, ...args_5) => __awaiter(void 0, [tableName_5, columnName_4, searchTerm_1, ...args_5], void 0, function* (tableName, columnName, searchTerm, alias = '') {
+const like = (tableName_6, columnName_4, searchTerm_1, ...args_6) => __awaiter(void 0, [tableName_6, columnName_4, searchTerm_1, ...args_6], void 0, function* (tableName, columnName, searchTerm, alias = '') {
     const query = `SELECT *${alias ? ` AS ${alias}` : ''} FROM ${tableName} WHERE ${columnName} LIKE '%${searchTerm}%'`;
     const result = yield executeQuery(query);
     return result;
@@ -247,6 +294,7 @@ exports.Query = {
     executeQuery,
     selectAll,
     selectOne,
+    selectOneWithColumn,
     selectAllOrderBy,
     Paginate,
     filterTable,

@@ -9,9 +9,11 @@ const router = express.Router()
 router.post('/', userController.createUser)
 router.post('/login', userController.signInUser)
 router.get('/', userController.getUsers)
+router.put('/', userController.updateUser)
+router.delete('/:id', userController.deleteUser);
 // File Management Routes
 router.post('/upload', userController.fileUpload)
-router.delete('/delete/:filename', userController.deleteFileData)
+// router.delete('/delete/:filename', userController.deleteFileData)
 
 // Payment Gateway Routes
 
