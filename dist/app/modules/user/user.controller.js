@@ -85,9 +85,9 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const userQuery = 'SELECT COUNT(email) FROM `user_info`';
+    const userQuery = 'SELECT * FROM `users`';
     try {
-        const userResult = yield queryCollection_1.Query.Paginate('users', 1, 3, [], 'id', 'DESC', { name: 'i', email: 'u' });
+        const userResult = yield queryCollection_1.Query.executeQuery(userQuery);
         (0, sendApiResponse_1.default)(res, 200, true, 'User fetched successfully', userResult);
     }
     catch (err) {

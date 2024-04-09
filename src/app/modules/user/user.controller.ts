@@ -78,9 +78,9 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const getUsers = async (req: Request, res: Response, next: NextFunction) => {
-    const userQuery = 'SELECT COUNT(email) FROM `user_info`'
+    const userQuery = 'SELECT * FROM `users`'
     try {
-        const userResult = await Query.Paginate('users', 1, 3, [], 'id', 'DESC', { name: 'i', email: 'u' });
+        const userResult = await Query.executeQuery(userQuery);
 
         sendApiResponse(res, 200, true, 'User fetched successfully', userResult)
     } catch (err) {
