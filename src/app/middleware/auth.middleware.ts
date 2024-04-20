@@ -4,7 +4,6 @@ import { Query } from "../lib/dbQuery/queryCollection";
 // Middleware for admin role
 export const isAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const email = req.email; // Accessing email from the request object
-    // console.log(email)
 
     // Assuming Query is imported properly
     const user = await Query.selectOne('users', 'email', email);

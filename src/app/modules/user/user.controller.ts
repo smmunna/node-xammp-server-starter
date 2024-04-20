@@ -1,16 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { body, validationResult } from 'express-validator';
-import deleteFile from "../../utils/fileManagement/deleteFile";
 import { Query } from "../../lib/dbQuery/queryCollection";
-import { fileUpload as myFileUpload, photoUpload } from "../../utils/fileManagement/upload.config";
+import { photoUpload } from "../../utils/fileManagement/upload.config";
 import deleteFastFile from "../../lib/file/deleteFastFile";
 import passwordHash from 'password-hash';
 import parsedURL from "../../lib/file/photoPath";
 import sendApiResponse from "../../lib/ApiResponse/sendApiResponse";
 
+
+// Create user
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        // Photo upload middleware
         photoUpload.single('photo')(req, res, async (err) => {
             if (err) {
                 console.error('Error uploading photo:', err);
@@ -18,13 +19,17 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
             }
 
             // Access form data and uploaded file
-            const { name, password, email } = req.body;
+            const {
+                username, password, email, phone, user_id, dept_id, role,
+            } = req.body;
+
             const photoPath = req.file?.path;
-            const photoURL = `${req.protocol}://${req.get('host')}/` + photoPath?.replace(/\\/g, "/")
-            const hashedPassword = passwordHash.generate(password)
+            const photoURL = `${req.protocol}://${req.get('host')}/` + photoPath?.replace(/\\/g, "/");
 
+            const hashedPassword = passwordHash.generate(password);
 
-            const existingUser = await Query.selectOne('users', 'email', email)
+            const existingUser = await Query.selectOne('users', 'email', email);
+
             if (existingUser) {
                 deleteFastFile(photoPath);
                 return res.status(400).send({
@@ -34,33 +39,39 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
             }
 
             // Check for missing or empty fields
-            if (!name || !password || !email || !photoPath) {
+            if (!username || !password || !email || !photoPath || !user_id || !dept_id) {
+
                 // Delete the file if it exists
                 if (photoPath) {
                     deleteFastFile(photoPath);
                 }
+
                 return res.status(400).send({
                     success: false,
                     message: 'Please provide all required fields'
                 });
             }
 
-            const query = `INSERT INTO users (name, email, password, image) VALUES ('${name}', '${email}', '${hashedPassword}', '${photoURL}')`;
+            const query = `
+                INSERT INTO users (
+                    username, password, email, phone, photo, dept_id, user_id, role
+                ) 
+                VALUES (
+                    '${username}', '${hashedPassword}', '${email}', '${phone}', 
+                    '${photoURL}', '${dept_id}', '${user_id}','${role}'
+                )
+            `;
 
             try {
-                // Assuming you're using a database library like knex.js or mysql2
-                // Here, 'executeQuery' is just a placeholder for your database library's method to execute the query
                 const result = await Query.executeQuery(query);
 
-                // If all fields are provided, respond with success message
                 if (result) {
                     res.status(200).send({
                         success: true,
                         message: 'User created successfully',
                         userdata: result
                     });
-                }
-                else {
+                } else {
                     res.status(400).send({
                         success: false,
                         message: 'User creation failed'
@@ -77,146 +88,103 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const getUsers = async (req: Request, res: Response, next: NextFunction) => {
-    const userQuery = 'SELECT * FROM `users`'
-    try {
-        const userResult = await Query.executeQuery(userQuery);
+// Getting a single user
+const getSingleUser = async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id;
 
-        sendApiResponse(res, 200, true, 'User fetched successfully', userResult)
+    try {
+        const query = `SELECT * FROM users WHERE id = ${id};
+`;
+
+        // Execute the query
+        const userResult = await Query.executeQuery(query);
+
+        // If user not found, return error
+        if (!userResult || userResult.length === 0) {
+            return sendApiResponse(res, 404, false, 'User not found');
+        }
+
+        // Extract the first row as the user object
+        const user = userResult[0];
+
+        // Respond with the fetched user information
+        sendApiResponse(res, 200, true, 'User fetched successfully', user)
     } catch (err) {
         next(err);
     }
 
 };
 
-/**
- * JWT GENERATE TOKEN WHEN SIGN IN USER
- * -------------------------------------
- * When user will sign in, then jwt token will be generated
- * */
 
-const signInUser = async (req: Request, res: Response, next: NextFunction) => {
-    const email = req.body.email;
-    // const password = req.body.password;
-
-    const user = email
-
-    /**
-     * You can check the user email and password Here ;
-     * If successful user, then sign token and login successful else Unauthorized user,Invalid Login
-     * */
-
-    // Sign in jwt token
-    const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
-    const token = jwt.sign({ user }, `${accessTokenSecret}`, {
-        expiresIn: '1h'
-    })
-
-    res.status(200).json({
-        success: true,
-        user: user,
-        token: token
-    });
-}
-
-// File Uploading
-const fileUpload = async (req: Request, res: Response) => {
-
-    try {
-        myFileUpload.single('file')(req, res, (err: any) => {
-            if (err) {
-                return res.status(400).send(err.message);
-            }
-            const uploadedFile = req.file;
-            // const other = req.body.name;
-            // console.log(other)
-
-            // Respond with the uploaded file in the response
-            res.status(200).json({
-                message: 'Photo uploaded successfully',
-                file: uploadedFile,
-                photoURL: `${req.protocol}://${req.get('host')}/` + uploadedFile?.path.replace(/\\/g, "/") //use protocol `https://` use extra s
-            });
-        });
-    } catch (error) {
-        console.error('Error in userPhoto controller:', error);
-        res.status(500).send('Internal Server Error');
-    }
-}
-
-// File Deleting
-const deleteFileData = (req: Request, res: Response) => {
-    const directoryPath = 'uploads/documents'; // Pass the directory path here
-    const fileName = req.params.filename; // Pass the file name here
-    deleteFile(directoryPath, fileName, (error, message) => {
-        if (error) {
-            res.status(404).send({ message: error.message });
-        } else {
-            res.status(200).send({ message: message }); // File deletion successful
-        }
-    });
-}
-
-// Update User -with Form data
+// Perfect Update user TODO: Update user
 const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        // Handle photo upload
         photoUpload.single('photo')(req, res, async (err) => {
             if (err) {
                 console.error('Error uploading photo:', err);
                 return next(err);
             }
 
-            const { name, password, email, role } = req.body;
-            let photoURL = ''; // Initialize photoURL variable
+            const {
+                username,
+                password,
+                email,
+                phone,
+                photo,
+                dept_id,
+                user_id,
+                role,
+            } = req.body;
 
-            // Check if photo was uploaded
+            let photoURL = '';
+
             if (req.file) {
-                // Construct photo URL
                 photoURL = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, "/")}`;
             }
 
-            // Get existing user data
-            const user = await Query.selectOneWithColumn('users', ['name', 'email', 'password', 'image'], 'email', email);
+            const user = await Query.selectOneWithColumn('users', ['username', 'password', 'photo', 'email'], 'email', email);
 
-            // If user exists and photo is provided, delete old photo
-            if (user && req.file && user.image) {
-                deleteFastFile(parsedURL(user.image));
+            if (user && req.file && user.photo) {
+                deleteFastFile(parsedURL(user.photo));
             }
 
-            // Construct update query
-            let query = `UPDATE users SET`;
-            const updateFields = []; // Initialize an array to store update fields
+            let query = `UPDATE users SET username = '${username}', email = '${email}'`;
 
-            if (name !== undefined && name !== null) {
-                updateFields.push(`name = '${name}'`);
-            }
             if (password) {
-                updateFields.push(`password = '${passwordHash.generate(password)}'`);
+                query += `, password = '${passwordHash.generate(password)}'`;
             }
-            if (role !== undefined && role !== null) {
-                updateFields.push(`role = '${role}'`);
-            }
-            if (photoURL) {
-                updateFields.push(`image = '${photoURL}'`);
+            if (user_id) {
+                query += `, user_id = '${user_id}'`;
             }
 
-            // Add update fields to the query
-            query += ' ' + updateFields.join(', '); // Join update fields with ', '
+            if (phone) {
+                query += `, phone = '${phone}'`;
+            }
+
+            if (dept_id) {
+                query += `, dept_id = '${dept_id}'`;
+            }
+
+            if (role) {
+                query += `, role = '${role}'`;
+            }
+
+            if (photoURL) {
+                query += `, photo = '${photoURL}'`;
+            }
+
             query += ` WHERE email = '${email}'`;
 
-
-            // Execute update query
             const result = await Query.executeQuery(query);
 
             if (result) {
-                // Success response
                 res.status(200).send({
                     success: true,
                     message: 'User updated successfully',
                     updated: result
                 });
             } else {
-                // Error response
                 res.status(400).send({
                     success: false,
                     message: 'User update failed'
@@ -226,7 +194,8 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     } catch (error) {
         next(error);
     }
-}
+};
+
 
 // Delete user
 const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -237,46 +206,84 @@ const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
             throw new Error("Invalid ID");
         }
 
-        // User Existance
-        const userExistance = await Query.selectOne('users', 'id', id);
-        if (!userExistance) {
-            res.status(404).send({
-                success: false,
-                message: "User does not exist",
-            })
-        }
-        else {
-            const user = await Query.executeQuery(`SELECT image FROM users WHERE id ='${id}'`)
-            const path = parsedURL(user[0].image) //Old image URL
-            const query = `DELETE FROM users WHERE id = ${id}`;
-            const result = await Query.executeQuery(query);
+        const user = await Query.executeQuery(`SELECT photo FROM users WHERE user_id ='${id}'`)
+        const path = parsedURL(user[0].photo) //Old photo URL
+        const query = `DELETE FROM users WHERE user_id = ${id}`;
+        const result = await Query.executeQuery(query);
 
-            if (result) {
-                res.status(200).send({
-                    success: true,
-                    message: 'User deleted successfully',
-                    deleted: result
-                });
-                deleteFastFile(path);
-            } else {
-                res.status(400).send({
-                    success: false,
-                    message: 'User deletion failed'
-                });
-            }
+        if (result) {
+            res.status(200).send({
+                success: true,
+                message: 'User deleted successfully',
+                deleted: result
+            });
+            deleteFastFile(path);
+        } else {
+            res.status(400).send({
+                success: false,
+                message: 'User deletion failed'
+            });
         }
     } catch (error) {
         next(error);
     }
 }
 
+// User sign in
+const signInUser = async (req: Request, res: Response, next: NextFunction) => {
+    const email = req.body.email;
+    const password = req.body.password;
+
+    try {
+        // const query = `SELECT username,email,password FROM users WHERE email='${email}'`
+        const user = await Query.selectOne('users', 'email', email)
+        if (!user) {
+            return res.status(403).send({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+        const isPasswordValid = passwordHash.verify(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(403).send({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+
+        if (isPasswordValid && user) {
+            // Sign in jwt token
+            const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+            const token = jwt.sign({ user }, `${accessTokenSecret}`, {
+                expiresIn: '1h'
+            })
+
+            res.status(200).json({
+                success: true,
+                user: user,
+                token: token
+            });
+        }
+        else {
+            res.status(403).send({
+                success: false,
+                message: 'Invalid username or password'
+            })
+        }
+    } catch (error) {
+        res.status(403).send({
+            success: false,
+            message: 'Invalid username or password'
+        })
+    }
+}
+
+
 // These are accessible from different files.
 export const userController = {
     createUser,
-    getUsers,
-    signInUser,
-    fileUpload,
-    deleteFileData,
+    getSingleUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    signInUser,
 }

@@ -14,15 +14,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userController = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const deleteFile_1 = __importDefault(require("../../utils/fileManagement/deleteFile"));
 const queryCollection_1 = require("../../lib/dbQuery/queryCollection");
 const upload_config_1 = require("../../utils/fileManagement/upload.config");
 const deleteFastFile_1 = __importDefault(require("../../lib/file/deleteFastFile"));
 const password_hash_1 = __importDefault(require("password-hash"));
 const photoPath_1 = __importDefault(require("../../lib/file/photoPath"));
 const sendApiResponse_1 = __importDefault(require("../../lib/ApiResponse/sendApiResponse"));
+// Create user
 const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // Photo upload middleware
         upload_config_1.photoUpload.single('photo')(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
             var _a;
             if (err) {
@@ -30,7 +31,7 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 return next(err);
             }
             // Access form data and uploaded file
-            const { name, password, email } = req.body;
+            const { username, password, email, phone, user_id, dept_id, role, } = req.body;
             const photoPath = (_a = req.file) === null || _a === void 0 ? void 0 : _a.path;
             const photoURL = `${req.protocol}://${req.get('host')}/` + (photoPath === null || photoPath === void 0 ? void 0 : photoPath.replace(/\\/g, "/"));
             const hashedPassword = password_hash_1.default.generate(password);
@@ -43,7 +44,7 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 });
             }
             // Check for missing or empty fields
-            if (!name || !password || !email || !photoPath) {
+            if (!username || !password || !email || !photoPath || !user_id || !dept_id) {
                 // Delete the file if it exists
                 if (photoPath) {
                     (0, deleteFastFile_1.default)(photoPath);
@@ -53,12 +54,17 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                     message: 'Please provide all required fields'
                 });
             }
-            const query = `INSERT INTO users (name, email, password, image) VALUES ('${name}', '${email}', '${hashedPassword}', '${photoURL}')`;
+            const query = `
+                INSERT INTO users (
+                    username, password, email, phone, photo, dept_id, user_id, role
+                ) 
+                VALUES (
+                    '${username}', '${hashedPassword}', '${email}', '${phone}', 
+                    '${photoURL}', '${dept_id}', '${user_id}','${role}'
+                )
+            `;
             try {
-                // Assuming you're using a database library like knex.js or mysql2
-                // Here, 'executeQuery' is just a placeholder for your database library's method to execute the query
                 const result = yield queryCollection_1.Query.executeQuery(query);
-                // If all fields are provided, respond with success message
                 if (result) {
                     res.status(200).send({
                         success: true,
@@ -84,119 +90,67 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         next(error);
     }
 });
-const getUsers = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const userQuery = 'SELECT * FROM `users`';
+// Getting a single user
+const getSingleUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
     try {
-        const userResult = yield queryCollection_1.Query.executeQuery(userQuery);
-        (0, sendApiResponse_1.default)(res, 200, true, 'User fetched successfully', userResult);
+        const query = `SELECT * FROM users WHERE id = ${id};
+`;
+        // Execute the query
+        const userResult = yield queryCollection_1.Query.executeQuery(query);
+        // If user not found, return error
+        if (!userResult || userResult.length === 0) {
+            return (0, sendApiResponse_1.default)(res, 404, false, 'User not found');
+        }
+        // Extract the first row as the user object
+        const user = userResult[0];
+        // Respond with the fetched user information
+        (0, sendApiResponse_1.default)(res, 200, true, 'User fetched successfully', user);
     }
     catch (err) {
         next(err);
     }
 });
-/**
- * JWT GENERATE TOKEN WHEN SIGN IN USER
- * -------------------------------------
- * When user will sign in, then jwt token will be generated
- * */
-const signInUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const email = req.body.email;
-    // const password = req.body.password;
-    const user = email;
-    /**
-     * You can check the user email and password Here ;
-     * If successful user, then sign token and login successful else Unauthorized user,Invalid Login
-     * */
-    // Sign in jwt token
-    const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
-    const token = jsonwebtoken_1.default.sign({ user }, `${accessTokenSecret}`, {
-        expiresIn: '1h'
-    });
-    res.status(200).json({
-        success: true,
-        user: user,
-        token: token
-    });
-});
-// File Uploading
-const fileUpload = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        upload_config_1.fileUpload.single('file')(req, res, (err) => {
-            if (err) {
-                return res.status(400).send(err.message);
-            }
-            const uploadedFile = req.file;
-            // const other = req.body.name;
-            // console.log(other)
-            // Respond with the uploaded file in the response
-            res.status(200).json({
-                message: 'Photo uploaded successfully',
-                file: uploadedFile,
-                photoURL: `${req.protocol}://${req.get('host')}/` + (uploadedFile === null || uploadedFile === void 0 ? void 0 : uploadedFile.path.replace(/\\/g, "/")) //use protocol `https://` use extra s
-            });
-        });
-    }
-    catch (error) {
-        console.error('Error in userPhoto controller:', error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-// File Deleting
-const deleteFileData = (req, res) => {
-    const directoryPath = 'uploads/documents'; // Pass the directory path here
-    const fileName = req.params.filename; // Pass the file name here
-    (0, deleteFile_1.default)(directoryPath, fileName, (error, message) => {
-        if (error) {
-            res.status(404).send({ message: error.message });
-        }
-        else {
-            res.status(200).send({ message: message }); // File deletion successful
-        }
-    });
-};
-// Update User -with Form data
+// Perfect Update user TODO: Update user
 const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // Handle photo upload
         upload_config_1.photoUpload.single('photo')(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
             if (err) {
                 console.error('Error uploading photo:', err);
                 return next(err);
             }
-            const { name, password, email, role } = req.body;
-            let photoURL = ''; // Initialize photoURL variable
-            // Check if photo was uploaded
+            const { username, password, email, phone, photo, dept_id, user_id, role, } = req.body;
+            let photoURL = '';
             if (req.file) {
-                // Construct photo URL
                 photoURL = `${req.protocol}://${req.get('host')}/${req.file.path.replace(/\\/g, "/")}`;
             }
-            // Get existing user data
-            const user = yield queryCollection_1.Query.selectOneWithColumn('users', ['name', 'email', 'password', 'image'], 'email', email);
-            // If user exists and photo is provided, delete old photo
-            if (user && req.file && user.image) {
-                (0, deleteFastFile_1.default)((0, photoPath_1.default)(user.image));
+            const user = yield queryCollection_1.Query.selectOneWithColumn('users', ['username', 'password', 'photo', 'email'], 'email', email);
+            if (user && req.file && user.photo) {
+                (0, deleteFastFile_1.default)((0, photoPath_1.default)(user.photo));
             }
-            // Construct update query
-            let query = `UPDATE users SET`;
-            const updateFields = []; // Initialize an array to store update fields
-            if (name !== undefined && name !== null) {
-                updateFields.push(`name = '${name}'`);
-            }
+            let query = `UPDATE users SET username = '${username}', email = '${email}'`;
             if (password) {
-                updateFields.push(`password = '${password_hash_1.default.generate(password)}'`);
+                query += `, password = '${password_hash_1.default.generate(password)}'`;
             }
-            if (role !== undefined && role !== null) {
-                updateFields.push(`role = '${role}'`);
+            if (user_id) {
+                query += `, user_id = '${user_id}'`;
+            }
+            if (phone) {
+                query += `, phone = '${phone}'`;
+            }
+            if (dept_id) {
+                query += `, dept_id = '${dept_id}'`;
+            }
+            if (role) {
+                query += `, role = '${role}'`;
             }
             if (photoURL) {
-                updateFields.push(`image = '${photoURL}'`);
+                query += `, photo = '${photoURL}'`;
             }
-            // Add update fields to the query
-            query += ' ' + updateFields.join(', '); // Join update fields with ', '
             query += ` WHERE email = '${email}'`;
-            // Execute update query
             const result = yield queryCollection_1.Query.executeQuery(query);
             if (result) {
-                // Success response
                 res.status(200).send({
                     success: true,
                     message: 'User updated successfully',
@@ -204,7 +158,6 @@ const updateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 });
             }
             else {
-                // Error response
                 res.status(400).send({
                     success: false,
                     message: 'User update failed'
@@ -224,46 +177,80 @@ const deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         if (!/^\d+$/.test(id)) {
             throw new Error("Invalid ID");
         }
-        // User Existance
-        const userExistance = yield queryCollection_1.Query.selectOne('users', 'id', id);
-        if (!userExistance) {
-            res.status(404).send({
-                success: false,
-                message: "User does not exist",
+        const user = yield queryCollection_1.Query.executeQuery(`SELECT photo FROM users WHERE user_id ='${id}'`);
+        const path = (0, photoPath_1.default)(user[0].photo); //Old photo URL
+        const query = `DELETE FROM users WHERE user_id = ${id}`;
+        const result = yield queryCollection_1.Query.executeQuery(query);
+        if (result) {
+            res.status(200).send({
+                success: true,
+                message: 'User deleted successfully',
+                deleted: result
             });
+            (0, deleteFastFile_1.default)(path);
         }
         else {
-            const user = yield queryCollection_1.Query.executeQuery(`SELECT image FROM users WHERE id ='${id}'`);
-            const path = (0, photoPath_1.default)(user[0].image); //Old image URL
-            const query = `DELETE FROM users WHERE id = ${id}`;
-            const result = yield queryCollection_1.Query.executeQuery(query);
-            if (result) {
-                res.status(200).send({
-                    success: true,
-                    message: 'User deleted successfully',
-                    deleted: result
-                });
-                (0, deleteFastFile_1.default)(path);
-            }
-            else {
-                res.status(400).send({
-                    success: false,
-                    message: 'User deletion failed'
-                });
-            }
+            res.status(400).send({
+                success: false,
+                message: 'User deletion failed'
+            });
         }
     }
     catch (error) {
         next(error);
     }
 });
+// User sign in
+const signInUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const email = req.body.email;
+    const password = req.body.password;
+    try {
+        // const query = `SELECT username,email,password FROM users WHERE email='${email}'`
+        const user = yield queryCollection_1.Query.selectOne('users', 'email', email);
+        if (!user) {
+            return res.status(403).send({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+        const isPasswordValid = password_hash_1.default.verify(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(403).send({
+                success: false,
+                message: 'Invalid email or password'
+            });
+        }
+        if (isPasswordValid && user) {
+            // Sign in jwt token
+            const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+            const token = jsonwebtoken_1.default.sign({ user }, `${accessTokenSecret}`, {
+                expiresIn: '1h'
+            });
+            res.status(200).json({
+                success: true,
+                user: user,
+                token: token
+            });
+        }
+        else {
+            res.status(403).send({
+                success: false,
+                message: 'Invalid username or password'
+            });
+        }
+    }
+    catch (error) {
+        res.status(403).send({
+            success: false,
+            message: 'Invalid username or password'
+        });
+    }
+});
 // These are accessible from different files.
 exports.userController = {
     createUser,
-    getUsers,
-    signInUser,
-    fileUpload,
-    deleteFileData,
+    getSingleUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    signInUser,
 };

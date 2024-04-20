@@ -1,19 +1,17 @@
 import express from "express";
 import { userController } from "./user.controller";
 import verifyToken from "../../middleware/verifyToken.middleware";
-import { isAdmin } from "../../middleware/auth.middleware";
-import { checkUserRoleAndRateLimit as limiter } from "../../middleware/apiRateLimit.middleware";
+import { isAdmin, isUser } from "../../middleware/auth.middleware";
+import { checkUserRoleAndRateLimit } from "../../middleware/apiRateLimit.middleware";
 
 const router = express.Router()
 
 router.post('/', userController.createUser)
 router.post('/login', userController.signInUser)
-router.get('/', userController.getUsers)
+router.get('/:id', userController.getSingleUser)
 router.put('/', userController.updateUser)
-router.delete('/:id', userController.deleteUser);
-// File Management Routes
-router.post('/upload', userController.fileUpload)
-// router.delete('/delete/:filename', userController.deleteFileData)
+router.delete('/:id', userController.deleteUser)
+
 
 // Payment Gateway Routes
 

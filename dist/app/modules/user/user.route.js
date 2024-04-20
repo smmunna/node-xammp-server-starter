@@ -9,12 +9,9 @@ const user_controller_1 = require("./user.controller");
 const router = express_1.default.Router();
 router.post('/', user_controller_1.userController.createUser);
 router.post('/login', user_controller_1.userController.signInUser);
-router.get('/', user_controller_1.userController.getUsers);
+router.get('/:id', user_controller_1.userController.getSingleUser);
 router.put('/', user_controller_1.userController.updateUser);
 router.delete('/:id', user_controller_1.userController.deleteUser);
-// File Management Routes
-router.post('/upload', user_controller_1.userController.fileUpload);
-// router.delete('/delete/:filename', userController.deleteFileData)
 // Payment Gateway Routes
 // Redirect URL will be in app.ts file, Here redirect URL will not work
 /**

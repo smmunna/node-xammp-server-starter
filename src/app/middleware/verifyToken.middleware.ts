@@ -32,7 +32,8 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
                 // console.log(userInfo)
 
                 // Send the email to Next Middleware    
-                req.email = userInfo.user;
+                // req.email = userInfo.user; //full user object information
+                req.email = userInfo.user.email; // just user email
 
                 next();
             }

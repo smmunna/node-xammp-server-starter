@@ -14,7 +14,6 @@ const queryCollection_1 = require("../lib/dbQuery/queryCollection");
 // Middleware for admin role
 const isAdmin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const email = req.email; // Accessing email from the request object
-    // console.log(email)
     // Assuming Query is imported properly
     const user = yield queryCollection_1.Query.selectOne('users', 'email', email);
     // Check if user exists and has a role
