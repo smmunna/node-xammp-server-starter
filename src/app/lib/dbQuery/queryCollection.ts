@@ -146,22 +146,31 @@ const Paginate = async (
  * Retrieve filtered columns from a table.
  * @param {string} tableName - The name of the table.
  * @param {string[]} columns - An array of column names to select.
- * @param {string} [condition=''] - The condition to filter the rows.
+ * @param {string[]} [conditions=[]] - An array of conditions to filter the rows.
  * @param {boolean} [distinct=false] - Whether to select distinct values (default: false).
- * @param {string} [orderBy=''] - Order by take two values (DESC | ASC).
- * @param {string} [orderByColumn=''] - Based on which column, you want to order.
+ * @param {string} [orderBy=''] - The order direction (DESC | ASC).
+ * @param {string} [orderByColumn=''] - The column to order by.
  * @param {number} [limit=null] - Maximum number of rows to return (default: null, meaning no limit).
  * @returns {Promise<any[]>} A Promise that resolves to the selected columns' data.
  */
-const filterTable = async (tableName: string, columns: string[] = [], condition: string = '', distinct: boolean = false, orderBy: string = '', orderByColumn: string = '', limit: number | null = null): Promise<any[]> => {
+const filterTable = async (
+    tableName: string,
+    columns: string[] = [],
+    conditions: string[] = [],
+    distinct: boolean = false,
+    orderBy: string = '',
+    orderByColumn: string = '',
+    limit: number | null = null
+): Promise<any[]> => {
     // Generate the SELECT clause
     let selectClause = distinct ? 'SELECT DISTINCT ' : 'SELECT ';
     selectClause += columns.length > 0 ? columns.join(', ') : '*';
 
-    // Generate the SQL query with condition
+    // Generate the SQL query with conditions
     let query = `${selectClause} FROM ${tableName}`;
-    if (condition) {
-        query += ` WHERE ${condition}`;
+
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
     }
 
     if (orderBy && orderByColumn) {
@@ -177,6 +186,7 @@ const filterTable = async (tableName: string, columns: string[] = [], condition:
     const result = await executeQuery(query);
     return result;
 };
+
 
 /**
  * Important Functions
