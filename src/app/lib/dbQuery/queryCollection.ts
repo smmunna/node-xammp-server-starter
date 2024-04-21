@@ -34,10 +34,23 @@ const selectAll = async (tableName: string): Promise<any> => {
  * @param {any} condition - The condition for selection.
  * @returns {Promise<any>} A Promise that resolves to the single result based on the query parameters.
  */
-const selectOne = async (tableName: string, columnName: string, condition: any): Promise<any> => {
-    const query = `SELECT * FROM ${tableName} WHERE ${columnName} = ${con.escape(condition)}`;
+const selectOne = async (
+    tableName: string,
+    columnName: string,
+    condition: any,
+    selectedColumns?: string[]
+): Promise<any> => {
+    let columnSelection = '*'; // Default to select all columns
+
+    if (selectedColumns && selectedColumns.length > 0) {
+        columnSelection = selectedColumns.join(', '); // Construct column selection
+    }
+
+    const query = `SELECT ${columnSelection} FROM ${tableName} WHERE ${columnName} = ${con.escape(condition)}`;
+
     return executeQuery(query).then(result => result[0]);
-}
+};
+
 
 /**
  * Selects a single record from a table based on a condition.
