@@ -80,15 +80,19 @@ const selectAllOrderBy = async (tableName: string, columnName: string, orderBy: 
 
 /**
  * Paginates data from a specified table in the database.
+ *
  * @param {string} tableName - The name of the table from which data will be paginated.
  * @param {number} pageNumber - The page number.
  * @param {number} itemsPerPage - The number of items per page.
  * @param {string[]} [columns] - Optional array of column names to fetch. If not provided, all columns will be fetched.
  * @param {string} [orderByColumn] - Optional parameter to specify the column to order by.
- * @param {string} [orderByDirection] - Optional parameter to specify the order direction (ASC or DESC).
+ * @param {'ASC' | 'DESC'} [orderByDirection] - Optional parameter to specify the order direction (ASC or DESC).
  * @param {Record<string, any>} [searchParams] - Optional object containing search parameters for each column.
+ * @param {string[]} [fixedConditions] - Optional array of fixed conditions to include in the WHERE clause.
+ *
  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
  */
+
 const Paginate = async (
     tableName: string,
     pageNumber: number,
@@ -96,7 +100,8 @@ const Paginate = async (
     columns?: string[],
     orderByColumn?: string,
     orderByDirection?: 'ASC' | 'DESC',
-    searchParams?: Record<string, any>
+    searchParams?: Record<string, any>,
+    fixedConditions?: string[]
 ): Promise<{ total: number; offset: number; limit: number; data: any[] }> => {
     const offset = (pageNumber - 1) * itemsPerPage;
     const limit = itemsPerPage;
@@ -115,7 +120,12 @@ const Paginate = async (
             .map(([column, value]) => `${column} LIKE '%${value}%'`);
     }
 
-    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' OR ')}` : '';
+    // Add fixed conditions if provided
+    if (fixedConditions && fixedConditions.length > 0) {
+        whereConditions = [...whereConditions, ...fixedConditions];
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     const countQuery = `SELECT COUNT(*) AS total FROM ${tableName} ${whereClause}`;
     const dataQuery = `SELECT ${columnSelection} FROM ${tableName} ${whereClause} ${orderByClause} LIMIT ${limit} OFFSET ${offset}`;
@@ -129,7 +139,6 @@ const Paginate = async (
 
     return { total, offset, limit, data };
 };
-
 
 
 
