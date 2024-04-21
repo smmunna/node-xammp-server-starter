@@ -64,28 +64,6 @@ const selectAllOrderBy = async (tableName: string, columnName: string, orderBy: 
     return executeQuery(query);
 }
 
-// /**
-//  * Paginates data from a specified table in the database.
-//  * @param {string} tableName - The name of the table from which data will be paginated.
-//  * @param {number} pageNumber - The page number.
-//  * @param {number} itemsPerPage - The number of items per page.
-//  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
-//  */
-// const Paginate = async (tableName: string, pageNumber: number, itemsPerPage: number): Promise<{ total: number, offset: number, limit: number, data: any[] }> => {
-//     const offset = (pageNumber - 1) * itemsPerPage;
-//     const limit = itemsPerPage;
-//     const countQuery = `SELECT COUNT(*) AS total FROM ${tableName}`;
-//     const dataQuery = `SELECT * FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`;
-
-//     // Execute the count query to get total items
-//     const countResult = await executeQuery(countQuery);
-//     const total = countResult[0].total;
-
-//     // Execute the data query to retrieve paginated data
-//     const data = await executeQuery(dataQuery);
-
-//     return { total, offset, limit, data };
-// }
 
 /**
  * Paginates data from a specified table in the database.
@@ -111,20 +89,20 @@ const Paginate = async (
     const limit = itemsPerPage;
     const columnSelection = columns && columns.length > 0 ? columns.join(', ') : '*'; // Construct column selection
     let orderByClause = ''; // Initialize order by clause
-    let whereClause = ''; // Initialize where clause
+    let whereConditions: string[] = []; // Initialize where conditions array
 
     // Construct order by clause if both orderByColumn and orderByDirection are provided
     if (orderByColumn && orderByDirection) {
         orderByClause = `ORDER BY ${orderByColumn} ${orderByDirection}`;
     }
 
-    // Construct where clause based on search parameters
-    if (searchParams) {
-        const conditions = Object.entries(searchParams)
-            .map(([column, value]) => `${column} LIKE '%${value}%'`)
-            .join(' OR ');
-        whereClause = `WHERE ${conditions}`;
+    // Construct where conditions based on search parameters if provided
+    if (searchParams && Object.keys(searchParams).length > 0) {
+        whereConditions = Object.entries(searchParams)
+            .map(([column, value]) => `${column} LIKE '%${value}%'`);
     }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' OR ')}` : '';
 
     const countQuery = `SELECT COUNT(*) AS total FROM ${tableName} ${whereClause}`;
     const dataQuery = `SELECT ${columnSelection} FROM ${tableName} ${whereClause} ${orderByClause} LIMIT ${limit} OFFSET ${offset}`;
@@ -138,7 +116,6 @@ const Paginate = async (
 
     return { total, offset, limit, data };
 };
-
 
 
 
