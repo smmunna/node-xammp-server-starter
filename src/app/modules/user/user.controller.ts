@@ -32,10 +32,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 
             if (existingUser) {
                 deleteFastFile(photoPath);
-                return res.status(400).send({
-                    success: false,
-                    message: 'User already exists'
-                });
+                return sendApiResponse(res, 400, false, 'User already exists', existingUser);
             }
 
             // Check for missing or empty fields
@@ -46,10 +43,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
                     deleteFastFile(photoPath);
                 }
 
-                return res.status(400).send({
-                    success: false,
-                    message: 'Please provide all required fields'
-                });
+                return sendApiResponse(res, 400, false, 'Please provide all required fields')
             }
 
             const query = `
@@ -66,16 +60,9 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
                 const result = await Query.executeQuery(query);
 
                 if (result) {
-                    res.status(200).send({
-                        success: true,
-                        message: 'User created successfully',
-                        userdata: result
-                    });
+                    sendApiResponse(res, 200, true, 'User created successfully', result)
                 } else {
-                    res.status(400).send({
-                        success: false,
-                        message: 'User creation failed'
-                    });
+                    sendApiResponse(res, 400, false, 'User creation failed')
                 }
             } catch (error) {
                 console.error('Error executing query:', error);
@@ -93,28 +80,17 @@ const getSingleUser = async (req: Request, res: Response, next: NextFunction) =>
     const id = req.params.id;
 
     try {
-        const query = `SELECT * FROM users WHERE id = ${id};
-`;
-
         // Execute the query
-        const userResult = await Query.executeQuery(query);
-
-        // If user not found, return error
-        if (!userResult || userResult.length === 0) {
-            return sendApiResponse(res, 404, false, 'User not found');
-        }
-
-        // Extract the first row as the user object
-        const user = userResult[0];
+        const userResult = await Query.selectOne('users', 'id', id, ['username', 'email', 'phone', 'photo'])
 
         // Respond with the fetched user information
-        sendApiResponse(res, 200, true, 'User fetched successfully', user)
+        sendApiResponse(res, 200, true, 'User fetched successfully', userResult)
+
     } catch (err) {
         next(err);
     }
 
 };
-
 
 // Perfect Update user TODO: Update user
 const updateUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -196,7 +172,6 @@ const updateUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-
 // Delete user
 const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id;
@@ -277,7 +252,6 @@ const signInUser = async (req: Request, res: Response, next: NextFunction) => {
         })
     }
 }
-
 
 // These are accessible from different files.
 export const userController = {

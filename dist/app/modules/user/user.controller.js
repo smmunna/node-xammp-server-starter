@@ -38,10 +38,7 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             const existingUser = yield queryCollection_1.Query.selectOne('users', 'email', email);
             if (existingUser) {
                 (0, deleteFastFile_1.default)(photoPath);
-                return res.status(400).send({
-                    success: false,
-                    message: 'User already exists'
-                });
+                return (0, sendApiResponse_1.default)(res, 400, false, 'User already exists', existingUser);
             }
             // Check for missing or empty fields
             if (!username || !password || !email || !photoPath || !user_id || !dept_id) {
@@ -49,10 +46,7 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 if (photoPath) {
                     (0, deleteFastFile_1.default)(photoPath);
                 }
-                return res.status(400).send({
-                    success: false,
-                    message: 'Please provide all required fields'
-                });
+                return (0, sendApiResponse_1.default)(res, 400, false, 'Please provide all required fields');
             }
             const query = `
                 INSERT INTO users (
@@ -66,17 +60,10 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             try {
                 const result = yield queryCollection_1.Query.executeQuery(query);
                 if (result) {
-                    res.status(200).send({
-                        success: true,
-                        message: 'User created successfully',
-                        userdata: result
-                    });
+                    (0, sendApiResponse_1.default)(res, 200, true, 'User created successfully', result);
                 }
                 else {
-                    res.status(400).send({
-                        success: false,
-                        message: 'User creation failed'
-                    });
+                    (0, sendApiResponse_1.default)(res, 400, false, 'User creation failed');
                 }
             }
             catch (error) {
@@ -94,18 +81,10 @@ const createUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 const getSingleUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
     try {
-        const query = `SELECT * FROM users WHERE id = ${id};
-`;
         // Execute the query
-        const userResult = yield queryCollection_1.Query.executeQuery(query);
-        // If user not found, return error
-        if (!userResult || userResult.length === 0) {
-            return (0, sendApiResponse_1.default)(res, 404, false, 'User not found');
-        }
-        // Extract the first row as the user object
-        const user = userResult[0];
+        const userResult = yield queryCollection_1.Query.selectOne('users', 'id', id, ['username', 'email', 'phone', 'photo']);
         // Respond with the fetched user information
-        (0, sendApiResponse_1.default)(res, 200, true, 'User fetched successfully', user);
+        (0, sendApiResponse_1.default)(res, 200, true, 'User fetched successfully', userResult);
     }
     catch (err) {
         next(err);

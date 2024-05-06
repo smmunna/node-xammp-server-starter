@@ -44,8 +44,12 @@ const selectAll = (tableName) => __awaiter(void 0, void 0, void 0, function* () 
  * @param {any} condition - The condition for selection.
  * @returns {Promise<any>} A Promise that resolves to the single result based on the query parameters.
  */
-const selectOne = (tableName, columnName, condition) => __awaiter(void 0, void 0, void 0, function* () {
-    const query = `SELECT * FROM ${tableName} WHERE ${columnName} = ${server_1.con.escape(condition)}`;
+const selectOne = (tableName, columnName, condition, selectedColumns) => __awaiter(void 0, void 0, void 0, function* () {
+    let columnSelection = '*'; // Default to select all columns
+    if (selectedColumns && selectedColumns.length > 0) {
+        columnSelection = selectedColumns.join(', '); // Construct column selection
+    }
+    const query = `SELECT ${columnSelection} FROM ${tableName} WHERE ${columnName} = ${server_1.con.escape(condition)}`;
     return executeQuery(query).then(result => result[0]);
 });
 /**
@@ -71,53 +75,40 @@ const selectAllOrderBy = (tableName, columnName, orderBy) => __awaiter(void 0, v
     const query = `SELECT * FROM ${tableName} ORDER BY ${columnName} ${orderBy}`;
     return executeQuery(query);
 });
-// /**
-//  * Paginates data from a specified table in the database.
-//  * @param {string} tableName - The name of the table from which data will be paginated.
-//  * @param {number} pageNumber - The page number.
-//  * @param {number} itemsPerPage - The number of items per page.
-//  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
-//  */
-// const Paginate = async (tableName: string, pageNumber: number, itemsPerPage: number): Promise<{ total: number, offset: number, limit: number, data: any[] }> => {
-//     const offset = (pageNumber - 1) * itemsPerPage;
-//     const limit = itemsPerPage;
-//     const countQuery = `SELECT COUNT(*) AS total FROM ${tableName}`;
-//     const dataQuery = `SELECT * FROM ${tableName} LIMIT ${limit} OFFSET ${offset}`;
-//     // Execute the count query to get total items
-//     const countResult = await executeQuery(countQuery);
-//     const total = countResult[0].total;
-//     // Execute the data query to retrieve paginated data
-//     const data = await executeQuery(dataQuery);
-//     return { total, offset, limit, data };
-// }
 /**
  * Paginates data from a specified table in the database.
+ *
  * @param {string} tableName - The name of the table from which data will be paginated.
  * @param {number} pageNumber - The page number.
  * @param {number} itemsPerPage - The number of items per page.
  * @param {string[]} [columns] - Optional array of column names to fetch. If not provided, all columns will be fetched.
  * @param {string} [orderByColumn] - Optional parameter to specify the column to order by.
- * @param {string} [orderByDirection] - Optional parameter to specify the order direction (ASC or DESC).
+ * @param {'ASC' | 'DESC'} [orderByDirection] - Optional parameter to specify the order direction (ASC or DESC).
  * @param {Record<string, any>} [searchParams] - Optional object containing search parameters for each column.
+ * @param {string[]} [fixedConditions] - Optional array of fixed conditions to include in the WHERE clause.
+ *
  * @returns {Promise<{ total: number, offset: number, limit: number, data: any[] }>} An object containing pagination details and the paginated data.
  */
-const Paginate = (tableName, pageNumber, itemsPerPage, columns, orderByColumn, orderByDirection, searchParams) => __awaiter(void 0, void 0, void 0, function* () {
+const Paginate = (tableName, pageNumber, itemsPerPage, columns, orderByColumn, orderByDirection, searchParams, fixedConditions) => __awaiter(void 0, void 0, void 0, function* () {
     const offset = (pageNumber - 1) * itemsPerPage;
     const limit = itemsPerPage;
     const columnSelection = columns && columns.length > 0 ? columns.join(', ') : '*'; // Construct column selection
     let orderByClause = ''; // Initialize order by clause
-    let whereClause = ''; // Initialize where clause
+    let whereConditions = []; // Initialize where conditions array
     // Construct order by clause if both orderByColumn and orderByDirection are provided
     if (orderByColumn && orderByDirection) {
         orderByClause = `ORDER BY ${orderByColumn} ${orderByDirection}`;
     }
-    // Construct where clause based on search parameters
-    if (searchParams) {
-        const conditions = Object.entries(searchParams)
-            .map(([column, value]) => `${column} LIKE '%${value}%'`)
-            .join(' OR ');
-        whereClause = `WHERE ${conditions}`;
+    // Construct where conditions based on search parameters if provided
+    if (searchParams && Object.keys(searchParams).length > 0) {
+        whereConditions = Object.entries(searchParams)
+            .map(([column, value]) => `${column} LIKE '%${value}%'`);
     }
+    // Add fixed conditions if provided
+    if (fixedConditions && fixedConditions.length > 0) {
+        whereConditions = [...whereConditions, ...fixedConditions];
+    }
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
     const countQuery = `SELECT COUNT(*) AS total FROM ${tableName} ${whereClause}`;
     const dataQuery = `SELECT ${columnSelection} FROM ${tableName} ${whereClause} ${orderByClause} LIMIT ${limit} OFFSET ${offset}`;
     // Execute the count query to get total items
@@ -131,21 +122,21 @@ const Paginate = (tableName, pageNumber, itemsPerPage, columns, orderByColumn, o
  * Retrieve filtered columns from a table.
  * @param {string} tableName - The name of the table.
  * @param {string[]} columns - An array of column names to select.
- * @param {string} [condition=''] - The condition to filter the rows.
+ * @param {string[]} [conditions=[]] - An array of conditions to filter the rows.
  * @param {boolean} [distinct=false] - Whether to select distinct values (default: false).
- * @param {string} [orderBy=''] - Order by take two values (DESC | ASC).
- * @param {string} [orderByColumn=''] - Based on which column, you want to order.
+ * @param {string} [orderBy=''] - The order direction (DESC | ASC).
+ * @param {string} [orderByColumn=''] - The column to order by.
  * @param {number} [limit=null] - Maximum number of rows to return (default: null, meaning no limit).
  * @returns {Promise<any[]>} A Promise that resolves to the selected columns' data.
  */
-const filterTable = (tableName_2, ...args_2) => __awaiter(void 0, [tableName_2, ...args_2], void 0, function* (tableName, columns = [], condition = '', distinct = false, orderBy = '', orderByColumn = '', limit = null) {
+const filterTable = (tableName_2, ...args_2) => __awaiter(void 0, [tableName_2, ...args_2], void 0, function* (tableName, columns = [], conditions = [], distinct = false, orderBy = '', orderByColumn = '', limit = null) {
     // Generate the SELECT clause
     let selectClause = distinct ? 'SELECT DISTINCT ' : 'SELECT ';
     selectClause += columns.length > 0 ? columns.join(', ') : '*';
-    // Generate the SQL query with condition
+    // Generate the SQL query with conditions
     let query = `${selectClause} FROM ${tableName}`;
-    if (condition) {
-        query += ` WHERE ${condition}`;
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
     }
     if (orderBy && orderByColumn) {
         query += ` ORDER BY ${orderByColumn} ${orderBy}`;
