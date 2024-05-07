@@ -49,7 +49,10 @@
   ```javascript
     git clone https://github.com/smmunna/node-xammp-server-starter.git
   ```
-   - Goto this project directory `cd node-xammp-server-starter`
+   - Goto this project directory `cd node-xammp-server-starter` & remove `authorization` of the server
+  ```javascript
+       git remote rm origin
+  ```
    - Intall the required packages in `package.json`
   ```javascript
     npm install
